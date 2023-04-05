@@ -1,0 +1,7 @@
+ctypes
+PyNaCl
+pillow
+smail
+pypiwin32
+cryptography
+requests
