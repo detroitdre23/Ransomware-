@@ -37,7 +37,7 @@ customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark",
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 f = customtkinter.CTk()
-f.title("Email Sender")
+f.title("Certificate Generator")
 f.geometry(f"{900}x{900}")
 
 
