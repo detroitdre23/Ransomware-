@@ -20,29 +20,21 @@ from smail import sign_message
 E = 65537
 
 def getprime(bits: int) -> int:
-    """Generate a random bits size prime number"""
     
     secure_randrange = SystemRandom().randrange
     
-    #  Prime shall be (lowlimit < p < 2**bits-1). FIPS 186-4. B.3.1
     lowlimit = int(Decimal(2**0.5) * Decimal(2**(bits - 1)))
-    lowlimit |= 1 # n += 1 if n is odd
+    lowlimit |= 1 
     highlimit = 2**bits    
     while True:
         p = secure_randrange(lowlimit, highlimit, 2)
         
-        # (p–1) shall be relatively prime to e. FIPS 186-4. B.3.1
+        
         if gcd(E, p - 1) == 1:            
             if miller_rabin(p):
                 return p
 
 def rsa_keys(nlen: int) -> (int, int):
-    """Get public and private keys.
-    Method: FIPS 186-4, Appendix B.3.3.
-    Using these method p, q may be generated with lengths of 1024 or 1536 bits
-    (512 bits shall not). FIPS186-4. Appendix B.3.1. Criteria for IFC Key Pairs
-    """    
-
     if nlen not in (2048, 3072):
         print('Error. Use bits == 2048 or 3072')
         return 0, 0
@@ -52,20 +44,15 @@ def rsa_keys(nlen: int) -> (int, int):
     while True:
         q = getprime(bits)
         
-        # FIPS 186-4. B.3.1
         if abs(p - q) > 2**(bits-100):
 
-            # Euler's totient function.
             phi = (p - 1) * (q - 1)
 
-            # Verify that phi and e are coprime. FIPS 186-4. B.3.1
             if gcd(E, phi) == 1:
                 n = p * q
                 
-                # Private (or decryption) exponent d
                 d = pow(E, -1, phi)
                 
-                # If phi ≤ d ≤ 2**(nlen//2), new p, q, d shall be determined.
                 if 2**bits < d < phi:
                     public_key = (E, n)
                     private_key = (d, n)
@@ -110,8 +97,7 @@ class Encrypt(object):
     def __init__(self, Target=0, BoxM=0, Url=0):
 
         self.Target     = Target       
-        self.BoxM       = BoxM       
-        # self.Url        = Url          
+        self.BoxM       = BoxM           
 
     def FileE(loc):                   
         try:                           
