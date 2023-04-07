@@ -22,6 +22,12 @@ def cert_gen(emailAddress, commonName, countryName, localityName, stateOrProvinc
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(validityEndInSeconds)
     cert.set_issuer(cert.get_subject())
+    cert.set_pubkey(k)
+    cert.sign(k, 'sha512')
+    with open(CERT_FILE, "wt") as f:
+        f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
+    with open(KEY_FILE, "wt") as f:
+        f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
     print('The Self-Signed Certificate is generated in the file "certificate.crt"\n')
     print('Certificate Infos : \n')
     print('Email Address : ',emailAddress,' ,Common Name : ',commonName,' ,Country Name : ',countryName,' ,Locality Name : ',localityName,
