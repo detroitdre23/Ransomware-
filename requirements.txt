@@ -1,7 +1,12 @@
-ctypes
-PyNaCl
-pillow
-smail
-pypiwin32
-cryptography
-requests
+pip install ctypes
+pip install PyNaCl
+pip install pillow
+pip install python-smail
+pip install pypiwin32
+pip install cryptography
+pip install requests
+pip install PyNacl
+pip install pywin32
+pip install customtkinter
+pip install pyopenssl
+pip install pycryptodome
