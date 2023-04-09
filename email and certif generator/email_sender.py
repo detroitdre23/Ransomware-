@@ -12,13 +12,17 @@ def send_email(subject, body, sender, recipients, password, CERT_FILE, KEY_FILE)
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = sender
-    msg['To'] = ', '.join(recipients)
+    if ',' in recipients:
+        msg['To'] = (', ').join(recipients.split(','))
+        recipients = (', ').join(recipients.split(','))
+    else:
+        msg['To'] = recipients
     signed_msg = sign_message(msg, KEY_FILE, CERT_FILE)
     smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
     smtp_server.ehlo('Gmail')
     smtp_server.starttls()
     smtp_server.login(sender, password)
-    smtp_server.sendmail(sender, recipients, signed_msg.as_string())
+    smtp_server.sendmail(sender, recipients , signed_msg.as_string())
     smtp_server.quit()
     print('mail sent')
 
