@@ -41,4 +41,3 @@ for  AllFiles in Paths:
                     Decrypt(FilePath,box).FileE()             
 change_bg()
 os.remove('private.pem')
-os.remove('decrypt.exe')        

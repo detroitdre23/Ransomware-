@@ -1,17 +1,6 @@
 from random import randrange
     
 def miller_rabin(n, k=40):
-    """Miller-Rabin primality testing.    
-    Deterministic if n < 3317044064679887385961981 (≈ 1.37 * 2**81);
-    probablistic if n >= 3317044064679887385961981 (error probability < 4**-k).
-    https://en.wikipedia.org/wiki/Miller-Rabin_primality_test
-    
-    n = Integer to be tested for primality.
-    k = 40 (error probability 2**-80): number of rounds (witnesses) of m-r
-    testing. FIPS 186-4, F.1.
-    return False, if n is composite,
-    return True, if n is probably prime.    
-    """
     
     def is_composite(a, d, n, s):
         x = pow(a, d, n)
@@ -63,7 +52,6 @@ def miller_rabin(n, k=40):
         s += 1
 
     # Smallest odd numbers for which Miller-Rabin primality test on bases
-    # <= n-th prime does not reveal compositeness. https://oeis.org/A014233
     bases = (2047, 1373653, 25326001, 3215031751, 2152302898747,
              3474749660383, 341550071728321, 341550071728321,
              3825123056546413051, 3825123056546413051,
